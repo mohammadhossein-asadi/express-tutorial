@@ -10,7 +10,7 @@ const authRouter = require("./routes/auth.routes");
 app.use(requestsMiddleware);
 
 // Routes
-app.use('/api/v1/auth', authRouter); // http://localhost:8000/api/v1/auth/register
+app.use("/api/v1/auth", authRouter); // http://localhost:8000/api/v1/auth/register
 app.use("/api/v1/user", userRouter); // http://localhost:8000/api/v1/user/newUser
 app.get("/", (req, res) => res.send("Welcome to my website❤️"));
 

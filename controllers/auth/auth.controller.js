@@ -14,10 +14,10 @@ const signUp = async (req, res) => {
   try {
     const availableUser = await Auth.findOne({ email });
     if (availableUser) {
-      return res.status(442).json({ message: "Already User Exists" });
+      return res.status(422).json({ message: "Already User Exists" });
     }
 
-    const hashedPassword = bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new Auth({
       username,
@@ -37,26 +37,39 @@ const signUp = async (req, res) => {
   }
 };
 
+const signIn = async (req, res) => {
+  const { password, email } = req.body;
 
-const signIn = async (req,res)=>{
-    const {password ,email} = req.body
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-     const errors = validationResult(req);
-     if (!errors.isEmpty()) {
-       return res.status(400).json({ errors: errors.array() });
-     }
+  try {
+    const availableUser = await Auth.findOne({ email });
+    if (!availableUser) {
+      return res.status(404).json({ message: "User Not Found :(" });
+    }
 
-     try {
-        const availableUser = Auth.findOne({email})
-        if(!availableUser){
-            return res.status(404).json({message: "User Not Found :("})
-        }
-     } catch (error) {
-        res.status(500).json(error.message)
-     }
-}
+    const hashedPassword = await bcrypt.compare(
+      password,
+      availableUser.password
+    );
+    if (!hashedPassword) {
+      return res.status(401).json("Wrong Credentials!");
+    }
 
+    const accessToken = JWT.sign(
+      { email: availableUser.email },
+      process.env.SECRET_TOKEN_SIGN
+    );
+    res.status(200).json({availableUser, accessToken});
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+};
 
 module.exports = {
   signUp,
+  signIn,
 };
